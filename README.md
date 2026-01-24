@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# discord-notify
 
-## Getting Started
+GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsアプリケーション。
 
-First, run the development server:
+## 機能
+
+- GitHub Issue/PR の作成、コメント、レビュー、クローズをDiscordに通知
+- 同じIssue/PRは同じDiscordスレッドに追記
+- Supabaseでスレッド情報を管理
+
+## 対応アクション
+
+| アクション | 説明 |
+|-----------|------|
+| `opened` | Issue/PRが作成された |
+| `created` | コメントが追加された |
+| `edited` | コメントが編集された |
+| `submitted` | レビューが投稿された |
+| `closed` | Issue/PRがクローズされた |
+
+## セットアップ
+
+### 1. 依存関係のインストール
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 環境変数の設定
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env`ファイルを作成:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Discord
+DISCORD_FORUM_CHANNEL_ID=https://discord.com/api/webhooks/xxx/yyy
 
-## Learn More
+# Supabase
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Supabaseテーブル作成
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Supabase管理画面のSQL Editorで実行:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sql
+CREATE TABLE threads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id TEXT NOT NULL UNIQUE,
+  thread_name TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
 
-## Deploy on Vercel
+CREATE INDEX idx_threads_thread_id ON threads(thread_id);
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. 開発サーバー起動
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+bun run dev
+```
+
+### 5. GitHub Webhookの設定
+
+1. GitHubリポジトリの Settings > Webhooks > Add webhook
+2. Payload URL: `https://discord-notify-sepia.vercel.app/api/notify`
+3. Content type: `application/json`
+4. Events: Issues, Issue comments, Pull requests, Pull request reviews
+
+## API
+
+### POST /api/notify
+
+GitHub Webhookからのリクエストを受け取り、Discordに通知します。
+
+**レスポンス例:**
+
+```json
+{
+  "success": true,
+  "threadId": "1234567890",
+  "threadName": "#1 Issue Title",
+  "dbSaved": true
+}
+```
+
+## 技術スタック
+
+- Next.js 16
+- React 19
+- Supabase
+- TypeScript
+- Biome (Linter/Formatter)
