@@ -9,6 +9,9 @@ interface NotifyRequest {
   comment?: {
     body: string;
   }
+  review?: {
+    body: string;
+  }
 }
 
 interface Issue {
@@ -30,6 +33,7 @@ interface PullRequest {
 async function sendToDiscord(
 	action: string,
   comment: { body: string } | undefined,
+  review: { body: string } | undefined,
 	openData: Issue | PullRequest,
 	threadId?: string,
 ): Promise<Response> {
@@ -42,9 +46,11 @@ async function sendToDiscord(
   if (action === "closed") {
     content = "This thread has been closed.";
   } else if (action === "created") {
-	  content = comment?.body ?? "これはコメントです．";
+	  content = comment?.body ?? "新しいスレッドが作成されました";
+  } else if (action === "submitted") {
+    content = review?.body ?? "新しいレビューコメントが追加されました";
   } else {
-    content = openData.body ?? "これは本文です．";
+    content = openData.body ?? "新しいコメントが追加されました";
   }
 
 	const payload = threadId
@@ -64,6 +70,7 @@ export async function POST(request: Request) {
 		const body: NotifyRequest = await request.json();
     const action = body.action;
     const comment = body.comment;
+    const review = body.review;
 	  const openData = body.issue ?? body.pull_request;
 
 		if (!openData) {
@@ -75,7 +82,7 @@ export async function POST(request: Request) {
 
 		// Discord APIでフォーラムチャンネルにスレッドを作成
 		const thread_id = "1464510641652891885";
-		const response = await sendToDiscord(action, comment, openData, thread_id);
+		const response = await sendToDiscord(action, comment, review, openData, thread_id);
 
 		if (!response.ok) {
 			const errorData = await response.json();
