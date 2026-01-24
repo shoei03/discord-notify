@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendToDiscord } from "@/lib/discord/client";
 import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
+import { saveThread } from "@/lib/supabase/client";
 import type { NotifyRequest } from "@/types/github";
 
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成
@@ -25,6 +26,12 @@ export async function POST(request: Request) {
     }
 
     const thread = await response.json();
+
+    // DB保存
+    const dbResult = await saveThread(thread.id, thread.name);
+    if (!dbResult.success) {
+      console.error("Failed to save thread to database:", dbResult.error);
+    }
 
     return NextResponse.json({
       success: true,
