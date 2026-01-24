@@ -4,20 +4,27 @@ import type { NotifyRequest } from "@/types/github";
  * GitHub Webhook の action に応じて Discord に送信するメッセージコンテンツを生成する
  */
 export function buildContent(body: NotifyRequest): string {
+  let content: string = `${body.sender.login}\n`;
   switch (body.action) {
     case "opened":
-      return `## Open\n${body.issue?.body || body.pull_request?.body}`;
+      content += `## Open\n${body.issue?.body || body.pull_request?.body}`;
+      break;
     case "created":
-      return `## Message\n${body.comment?.body}`;
+      content += `## Message\n${body.comment?.body}`;
+      break;
     case "edited":
-      return "コメントが編集されました";
+      content += "コメントが編集されました";
+      break;
     case "submitted":
-      return `## Review Comment\n${body.review?.body}`;
+      content += `## Review Comment\n${body.review?.body}`;
+      break;
     case "closed":
-      return "## Close\nこのスレッドはクローズされました";
+      content += "## Close\nこのスレッドはクローズされました";
+      break;
     default:
-      return "";
+      content += "";
   }
+  return content;
 }
 
 /**

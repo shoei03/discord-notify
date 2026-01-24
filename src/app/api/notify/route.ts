@@ -14,12 +14,7 @@ export async function POST(request: Request) {
 
     // Discord APIでフォーラムチャンネルにスレッドを作成
     const threadId = "1464510641652891885";
-    const response = await sendToDiscord(
-      content,
-      body.sender,
-      threadName,
-      threadId,
-    );
+    const response = await sendToDiscord(content, threadName, threadId);
 
     if (!response.ok) {
       const errorData = await response.json();
