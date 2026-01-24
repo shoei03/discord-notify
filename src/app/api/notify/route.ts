@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendToDiscord } from "@/lib/discord/client";
 import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
-import { saveThread, getThreadByName } from "@/lib/supabase/client";
+import { getThreadByName, saveThread } from "@/lib/supabase/client";
 import type { NotifyRequest } from "@/types/github";
 
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成

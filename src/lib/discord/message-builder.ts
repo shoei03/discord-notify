@@ -31,5 +31,5 @@ export function buildContent(body: NotifyRequest): string {
  * Discord スレッド名を生成する
  */
 export function buildThreadName(body: NotifyRequest): string {
-  return `[${body.issue?.title || body.pull_request?.title}](${body.issue?.url || body.pull_request?.url} "${body.issue?.title || body.pull_request?.title}")`;
+  return `#${body.issue?.number || body.pull_request?.number} ${body.issue?.title || body.pull_request?.title}(${body.issue?.url || body.pull_request?.url})`;
 }
