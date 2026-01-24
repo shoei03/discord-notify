@@ -47,6 +47,8 @@ async function sendToDiscord(
     content = "This thread has been closed.";
   } else if (action === "created") {
 	  content = comment?.body ?? "新しいスレッドが作成されました";
+  } else if (action === "edited") {
+    content = comment?.body ?? "コメントが編集されました";
   } else if (action === "submitted") {
     content = review?.body ?? "新しいレビューコメントが追加されました";
   } else {
