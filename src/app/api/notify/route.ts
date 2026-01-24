@@ -6,6 +6,9 @@ interface NotifyRequest {
   action: string;
 	issue?: Issue;
   pull_request?: PullRequest;
+  comment?: {
+    body: string;
+  }
 }
 
 interface Issue {
@@ -14,9 +17,6 @@ interface Issue {
   title: string;
   state: string;
   body?: string;
-  comment?: {
-    body: string;
-  };
 }
 
 interface PullRequest {
@@ -25,13 +25,11 @@ interface PullRequest {
   title: string;
   state: string;
   body?: string;
-  comment?: {
-    body: string;
-  };
 }
 
 async function sendToDiscord(
 	action: string,
+  comment: { body: string } | undefined,
 	openData: Issue | PullRequest,
 	threadId?: string,
 ): Promise<Response> {
@@ -44,7 +42,7 @@ async function sendToDiscord(
   if (action === "closed") {
     content = "This thread has been closed.";
   } else if (action === "created") {
-	  content = openData.comment?.body ?? "これはコメントです．";
+	  content = comment?.body ?? "これはコメントです．";
   } else {
     content = openData.body ?? "これは本文です．";
   }
@@ -65,6 +63,7 @@ export async function POST(request: Request) {
 	try {
 		const body: NotifyRequest = await request.json();
     const action = body.action;
+    const comment = body.comment;
 	  const openData = body.issue ?? body.pull_request;
 
 		if (!openData) {
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
 
 		// Discord APIでフォーラムチャンネルにスレッドを作成
 		const thread_id = "1464510641652891885";
-		const response = await sendToDiscord(action, openData, thread_id);
+		const response = await sendToDiscord(action, comment, openData, thread_id);
 
 		if (!response.ok) {
 			const errorData = await response.json();
