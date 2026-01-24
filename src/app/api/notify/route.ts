@@ -37,6 +37,8 @@ export async function POST(request: Request) {
       success: true,
       threadId: thread.id,
       threadName: thread.name,
+      dbSaved: dbResult.success,
+      dbError: dbResult.error,
     });
   } catch (error) {
     console.error("Error creating Discord thread:", error);
