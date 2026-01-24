@@ -13,16 +13,16 @@ export function buildContent(
   openData: Issue | PullRequest,
 ): string {
   switch (action) {
-    case "closed":
-      return "## Close\nこのスレッドはクローズされました";
+    case "opened":
+      return `## Open\n${openData.body}`;
+    case "created":
+      return `## Message\n${comment?.body}`;
     case "edited":
       return "コメントが編集されました";
-    case "created":
-      return comment?.body
-        ? `## コメント\n${comment.body}`
-        : `## スレッドの作成\n${openData.body}`;
     case "submitted":
-      return `## レビューコメント\n${review?.body}`;
+      return `## Review Comment\n${review?.body}`;
+    case "closed":
+      return "## Close\nこのスレッドはクローズされました";
     default:
       return "";
   }
