@@ -7,23 +7,14 @@ import type { NotifyRequest } from "@/types/github";
 export async function POST(request: Request) {
   try {
     const body: NotifyRequest = await request.json();
-    const { action, comment, review, sender } = body;
-    const openData = body.issue ?? body.pull_request;
-
-    if (!openData) {
-      return NextResponse.json(
-        { error: "Issue or Pull Request is required" },
-        { status: 400 },
-      );
-    }
 
     // メッセージコンテンツとスレッド名を生成
-    const content = buildContent(action, comment, review, sender, openData);
-    const threadName = buildThreadName(openData);
+    const content = buildContent(body);
+    const threadName = buildThreadName(body);
 
     // Discord APIでフォーラムチャンネルにスレッドを作成
     const threadId = "1464510641652891885";
-    const response = await sendToDiscord(content, threadName, threadId);
+    const response = await sendToDiscord(content, body.sender, threadName, threadId);
 
     if (!response.ok) {
       const errorData = await response.json();

@@ -1,45 +1,30 @@
-import type { Issue, PullRequest } from "@/types/github";
-
-type Comment = { body: string } | undefined;
-type Review = { body: string } | undefined;
-type Sender = { login: string; avatar_url: string } | undefined;
+import type { NotifyRequest } from "@/types/github";
 
 /**
  * GitHub Webhook の action に応じて Discord に送信するメッセージコンテンツを生成する
  */
 export function buildContent(
-  action: string,
-  comment: Comment,
-  review: Review,
-  sender: Sender,
-  openData: Issue | PullRequest,
+  body: NotifyRequest
 ): string {
-  let content = `**${sender?.login}** \n`;
-  switch (action) {
+  switch (body.action) {
     case "opened":
-      content += `## Open\n${openData.body}`;
-      break;
+      return `## Open\n${body.issue?.body || body.pull_request?.body}`;
     case "created":
-      content += `## Message\n${comment?.body}`;
-      break;
+      return `## Message\n${body.comment?.body}`;
     case "edited":
-      content += "コメントが編集されました";
-      break;
+      return "コメントが編集されました";
     case "submitted":
-      content += `## Review Comment\n${review?.body}`;
-      break;
+      return `## Review Comment\n${body.review?.body}`;
     case "closed":
-      content += "## Close\nこのスレッドはクローズされました";
-      break;
+      return "## Close\nこのスレッドはクローズされました";
     default:
-      content = "";
+      return "";
   }
-  return content;
 }
 
 /**
  * Discord スレッド名を生成する
  */
-export function buildThreadName(openData: Issue | PullRequest): string {
-  return `[${openData.title}](${openData.url} "${openData.title}")`;
+export function buildThreadName(body: NotifyRequest): string {
+  return `[${body.issue?.title || body.pull_request?.title}](${body.issue?.url || body.pull_request?.url} "${body.issue?.title || body.pull_request?.title}")`;
 }
