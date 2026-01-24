@@ -1,6 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import type { SaveThreadResult, Thread } from "@/types/database";
 
+export interface GetThreadResult {
+  success: boolean;
+  data?: Thread;
+  error?: string;
+}
+
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -35,6 +41,30 @@ export async function saveThread(
     return { success: true, data: data as Thread };
   } catch (error) {
     console.error("Supabase exception:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
+
+export async function getThreadByName(
+  threadName: string,
+): Promise<GetThreadResult> {
+  try {
+    const { data, error } = await supabase
+      .from("threads")
+      .select()
+      .eq("thread_name", threadName)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No rows returned - thread not found
+        return { success: true, data: undefined };
+      }
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: data as Thread };
+  } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: message };
   }

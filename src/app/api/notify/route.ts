@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendToDiscord } from "@/lib/discord/client";
 import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
-import { saveThread } from "@/lib/supabase/client";
+import { saveThread, getThreadByName } from "@/lib/supabase/client";
 import type { NotifyRequest } from "@/types/github";
 
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成
@@ -13,8 +13,11 @@ export async function POST(request: Request) {
     const content = buildContent(body);
     const threadName = buildThreadName(body);
 
-    // Discord APIでフォーラムチャンネルにスレッドを作成
-    const threadId = "1464510641652891885";
+    // DBからthreadNameでスレッドを検索
+    const existingThread = await getThreadByName(threadName);
+    const threadId = existingThread.data?.thread_id;
+
+    // Discord APIでフォーラムチャンネルにスレッドを作成（または既存スレッドに送信）
     const response = await sendToDiscord(content, threadName, threadId);
 
     if (!response.ok) {
