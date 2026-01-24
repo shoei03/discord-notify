@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 const DISCORD_FORUM_CHANNEL_ID = process.env.DISCORD_FORUM_CHANNEL_ID;
 
 interface NotifyRequest {
-	title: string;
-	content: string;
 	issue?: Issue;
 }
 
@@ -13,7 +11,7 @@ interface Issue {
   number: string;
   title: string;
   state: string;
-  body: string;
+  body?: string;
 }
 
 async function sendToDiscord(
@@ -38,14 +36,6 @@ async function sendToDiscord(
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成
 export async function POST(request: Request) {
 	try {
-		// 環境変数のチェック
-		if (!DISCORD_FORUM_CHANNEL_ID) {
-			return NextResponse.json(
-				{ error: "Discord credentials not configured" },
-				{ status: 500 },
-			);
-		}
-
 		const body: NotifyRequest = await request.json();
 	  const issue = body.issue;
 
