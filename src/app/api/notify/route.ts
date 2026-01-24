@@ -5,11 +5,19 @@ const DISCORD_FORUM_CHANNEL_ID = process.env.DISCORD_FORUM_CHANNEL_ID;
 interface NotifyRequest {
 	title: string;
 	content: string;
+	issue?: Issue;
+}
+
+interface Issue {
+  url: string;
+  number: string;
+  title: string;
+  state: string;
+  body: string;
 }
 
 async function sendToDiscord(
-	title: string,
-	content: string,
+	issue: Issue,
 	threadId?: string,
 ): Promise<Response> {
 	const url = threadId
@@ -17,8 +25,8 @@ async function sendToDiscord(
 		: `${DISCORD_FORUM_CHANNEL_ID}?wait=true`;
 
 	const payload = threadId
-		? { content }
-		: { thread_name: title, content };
+		? { content: issue.body }
+		: { thread_name: `#${issue.number}#${issue.title}`, content: issue.body };
 
 	return fetch(url, {
 		method: "POST",
@@ -39,18 +47,18 @@ export async function POST(request: Request) {
 		}
 
 		const body: NotifyRequest = await request.json();
+	  const issue = body.issue;
 
-		// 必須フィールドのバリデーション
-		if (!body.title || !body.content) {
+		if (!issue) {
 			return NextResponse.json(
-				{ error: "title and content are required" },
+				{ error: "Issue is required" },
 				{ status: 400 },
 			);
 		}
 
 		// Discord APIでフォーラムチャンネルにスレッドを作成
 		const thread_id = "1464510641652891885";
-		const response = await sendToDiscord(body.title, body.content, thread_id);
+		const response = await sendToDiscord(issue, thread_id);
 
 		if (!response.ok) {
 			const errorData = await response.json();
