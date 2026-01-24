@@ -14,6 +14,9 @@ interface Issue {
   title: string;
   state: string;
   body?: string;
+  comment?: {
+    body: string;
+  };
 }
 
 interface PullRequest {
@@ -22,6 +25,9 @@ interface PullRequest {
   title: string;
   state: string;
   body?: string;
+  comment?: {
+    body: string;
+  };
 }
 
 async function sendToDiscord(
@@ -33,11 +39,17 @@ async function sendToDiscord(
 		? `${DISCORD_FORUM_CHANNEL_ID}?wait=true&thread_id=${threadId}`
 		: `${DISCORD_FORUM_CHANNEL_ID}?wait=true`;
 
-  const content = action === "closed" ? "Closed" : openData.body;
+  let content = "";
+  const thread_name = `[${openData.title}](${openData.url} "${openData.title}")`;
+  if (action === "closed") {
+    content = "This thread has been closed.";
+  } else if (action === "created") {
+	  content = openData.comment?.body ?? "";
+  }
 
 	const payload = threadId
 		? { content }
-		: { thread_name: `#${openData.number}#${openData.title}`, content };
+		: { thread_name: thread_name, content };
 
 	return fetch(url, {
 		method: "POST",
