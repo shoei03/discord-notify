@@ -1,84 +1,14 @@
 import { NextResponse } from "next/server";
-
-const DISCORD_FORUM_CHANNEL_ID = process.env.DISCORD_FORUM_CHANNEL_ID;
-
-interface NotifyRequest {
-  action: string;
-	issue?: Issue;
-  pull_request?: PullRequest;
-  comment?: {
-    body: string;
-  }
-  review?: {
-    body: string;
-  }
-}
-
-interface Issue {
-  url: string;
-  number: string;
-  title: string;
-  state: string;
-  body?: string;
-}
-
-interface PullRequest {
-  url: string;
-  number: string;
-  title: string;
-  state: string;
-  body?: string;
-}
-
-async function sendToDiscord(
-	action: string,
-  comment: { body: string } | undefined,
-  review: { body: string } | undefined,
-	openData: Issue | PullRequest,
-	threadId?: string,
-): Promise<Response> {
-	const url = threadId
-		? `${DISCORD_FORUM_CHANNEL_ID}?wait=true&thread_id=${threadId}`
-		: `${DISCORD_FORUM_CHANNEL_ID}?wait=true`;
-
-  let content = "";
-  const thread_name = `[${openData.title}](${openData.url} "${openData.title}")`;
-  switch (action) {
-    case "closed":
-      content = "このスレッドはクローズされました";
-      break;
-    case "created":
-      content = `## スレッドの作成\n${comment?.body}`;
-      break;
-    case "edited":
-      content = "コメントが編集されました";
-      break;
-    case "submitted":
-      content = `### レビューコメント\n${review?.body}`;
-      break;
-    default:
-      content = `### コメント\n${openData.body}`;
-  }
-
-	const payload = threadId
-		? { content }
-		: { thread_name: thread_name, content };
-
-	return fetch(url, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(payload),
-	});
-}
+import { sendToDiscord } from "@/lib/discord/client";
+import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
+import type { NotifyRequest } from "@/types/github";
 
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成
 export async function POST(request: Request) {
 	try {
 		const body: NotifyRequest = await request.json();
-    const action = body.action;
-    const comment = body.comment;
-    const review = body.review;
-	  const openData = body.issue ?? body.pull_request;
+		const { action, comment, review } = body;
+		const openData = body.issue ?? body.pull_request;
 
 		if (!openData) {
 			return NextResponse.json(
@@ -87,9 +17,13 @@ export async function POST(request: Request) {
 			);
 		}
 
+		// メッセージコンテンツとスレッド名を生成
+		const content = buildContent(action, comment, review, openData);
+		const threadName = buildThreadName(openData);
+
 		// Discord APIでフォーラムチャンネルにスレッドを作成
-		const thread_id = "1464510641652891885";
-		const response = await sendToDiscord(action, comment, review, openData, thread_id);
+		const threadId = "1464510641652891885";
+		const response = await sendToDiscord(content, threadName, threadId);
 
 		if (!response.ok) {
 			const errorData = await response.json();
