@@ -26,17 +26,20 @@ export async function POST(request: Request) {
     }
 
     const thread = await response.json();
+    console.log("Discord API response:", JSON.stringify(thread, null, 2));
 
-    // DB保存
-    const dbResult = await saveThread(thread.id, thread.name);
+    // DB保存（thread.nameがない場合は生成したthreadNameを使用）
+    const savedThreadName = thread.name || threadName;
+    const savedThreadId = thread.id || thread.channel_id;
+    const dbResult = await saveThread(savedThreadId, savedThreadName);
     if (!dbResult.success) {
       console.error("Failed to save thread to database:", dbResult.error);
     }
 
     return NextResponse.json({
       success: true,
-      threadId: thread.id,
-      threadName: thread.name,
+      threadId: savedThreadId,
+      threadName: savedThreadName,
       dbSaved: dbResult.success,
       dbError: dbResult.error,
     });
