@@ -44,9 +44,9 @@ async function sendToDiscord(
   if (action === "closed") {
     content = "This thread has been closed.";
   } else if (action === "created") {
-	  content = openData.comment?.body ?? "";
+	  content = openData.comment?.body ?? "これはコメントです．";
   } else {
-    content = openData.body ?? "";
+    content = openData.body ?? "これは本文です．";
   }
 
 	const payload = threadId
