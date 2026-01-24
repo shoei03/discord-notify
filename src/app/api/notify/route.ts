@@ -43,16 +43,21 @@ async function sendToDiscord(
 
   let content = "";
   const thread_name = `[${openData.title}](${openData.url} "${openData.title}")`;
-  if (action === "closed") {
-    content = "This thread has been closed.";
-  } else if (action === "created") {
-	  content = comment?.body ?? "新しいスレッドが作成されました";
-  } else if (action === "edited") {
-    content = comment?.body ?? "コメントが編集されました";
-  } else if (action === "submitted") {
-    content = review?.body ?? "新しいレビューコメントが追加されました";
-  } else {
-    content = openData.body ?? "新しいコメントが追加されました";
+  switch (action) {
+    case "closed":
+      content = "このスレッドはクローズされました";
+      break;
+    case "created":
+      content = `## スレッドの作成\n${comment?.body}`;
+      break;
+    case "edited":
+      content = "コメントが編集されました";
+      break;
+    case "submitted":
+      content = `### レビューコメント\n${review?.body}`;
+      break;
+    default:
+      content = `### コメント\n${openData.body}`;
   }
 
 	const payload = threadId
