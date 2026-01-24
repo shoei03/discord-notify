@@ -1,12 +1,14 @@
 const DISCORD_FORUM_CHANNEL_ID = process.env.DISCORD_FORUM_CHANNEL_ID;
 
+interface DiscordEmbedAuthor {
+  name: string;
+  icon_url?: string;
+}
+
 interface DiscordEmbed {
   title: string;
   description: string;
-  author: {
-    name: string;
-    icon_url: string;
-  };
+  author?: DiscordEmbedAuthor;
   timestamp: string;
 }
 
@@ -36,18 +38,23 @@ function buildPayload(
   threadName: string,
   threadId?: string,
 ): DiscordPayload {
-    const embeds: DiscordEmbed[] = [
-        {
-            title: threadName,
-            description: content,
-            author: {
-                name: sender?.login || "Unknown",
-                icon_url: sender?.avatar_url || "",
-            },
-            timestamp: new Date().toISOString(),
-        }
-    ]
-  return threadId ? { content } : { thread_name: threadName, embeds: embeds };
+  // authorオブジェクトを構築（icon_urlが空の場合は含めない）
+  const author: DiscordEmbedAuthor | undefined = sender
+    ? {
+        name: sender.login,
+        ...(sender.avatar_url ? { icon_url: sender.avatar_url } : {}),
+      }
+    : undefined;
+
+  const embeds: DiscordEmbed[] = [
+    {
+      title: threadName,
+      description: content,
+      ...(author ? { author } : {}),
+      timestamp: new Date().toISOString(),
+    },
+  ];
+  return threadId ? { content } : { thread_name: threadName, embeds };
 }
 
 /**

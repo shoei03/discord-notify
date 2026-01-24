@@ -3,9 +3,7 @@ import type { NotifyRequest } from "@/types/github";
 /**
  * GitHub Webhook の action に応じて Discord に送信するメッセージコンテンツを生成する
  */
-export function buildContent(
-  body: NotifyRequest
-): string {
+export function buildContent(body: NotifyRequest): string {
   switch (body.action) {
     case "opened":
       return `## Open\n${body.issue?.body || body.pull_request?.body}`;
