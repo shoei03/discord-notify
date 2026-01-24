@@ -24,4 +24,8 @@ export interface NotifyRequest {
   review?: {
     body: string;
   };
+  sender: {
+    login: string;
+    avatar_url: string;
+  };
 }

@@ -2,6 +2,7 @@ import type { Issue, PullRequest } from "@/types/github";
 
 type Comment = { body: string } | undefined;
 type Review = { body: string } | undefined;
+type Sender = { login: string; avatar_url: string } | undefined;
 
 /**
  * GitHub Webhook の action に応じて Discord に送信するメッセージコンテンツを生成する
@@ -10,22 +11,30 @@ export function buildContent(
   action: string,
   comment: Comment,
   review: Review,
+  sender: Sender,
   openData: Issue | PullRequest,
 ): string {
+  let content = `<img width="20" src="${sender?.avatar_url}">**${sender?.login}** \n`;
   switch (action) {
     case "opened":
-      return `## Open\n${openData.body}`;
+      content += `## Open\n${openData.body}`;
+      break;
     case "created":
-      return `## Message\n${comment?.body}`;
+      content += `## Message\n${comment?.body}`;
+      break;
     case "edited":
-      return "コメントが編集されました";
+      content += "コメントが編集されました";
+      break;
     case "submitted":
-      return `## Review Comment\n${review?.body}`;
+      content += `## Review Comment\n${review?.body}`;
+      break;
     case "closed":
-      return "## Close\nこのスレッドはクローズされました";
+      content += "## Close\nこのスレッドはクローズされました";
+      break;
     default:
-      return "";
+      content = "";
   }
+  return content;
 }
 
 /**
