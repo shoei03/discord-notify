@@ -14,7 +14,7 @@ export function buildContent(
   sender: Sender,
   openData: Issue | PullRequest,
 ): string {
-  let content = `<img width="20" src="${sender?.avatar_url}">**${sender?.login}** \n`;
+  let content = `**${sender?.login}** \n`;
   switch (action) {
     case "opened":
       content += `## Open\n${openData.body}`;
