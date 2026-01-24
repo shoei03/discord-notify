@@ -14,15 +14,17 @@ export function buildContent(
 ): string {
 	switch (action) {
 		case "closed":
-			return "このスレッドはクローズされました";
-		case "created":
-			return `## スレッドの作成\n${comment?.body}`;
+			return "## Close\nこのスレッドはクローズされました";
 		case "edited":
 			return "コメントが編集されました";
+		case "created":
+			return comment?.body
+				? `## コメント\n${comment.body}`
+				: `## スレッドの作成\n${openData.body}`;
 		case "submitted":
-			return `### レビューコメント\n${review?.body}`;
-		default:
-			return `### コメント\n${openData.body}`;
+			return `## レビューコメント\n${review?.body}`;
+        default:
+            return ""
 	}
 }
 
