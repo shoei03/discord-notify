@@ -11,6 +11,15 @@ export async function POST(request: Request) {
 
     // メッセージコンテンツとスレッド名を生成
     const content = buildContent(body);
+    
+    // 対応していない action の場合は処理を終了
+    if (content === null) {
+      return NextResponse.json(
+        { message: "Unsupported action: " + body.action },
+        { status: 200 }
+      );
+    }
+    
     const threadName = buildThreadName(body);
 
     // DBからthreadNameでスレッドを検索

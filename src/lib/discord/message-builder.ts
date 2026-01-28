@@ -3,7 +3,7 @@ import type { NotifyRequest } from "@/types/github";
 /**
  * GitHub Webhook の action に応じて Discord に送信するメッセージコンテンツを生成する
  */
-export function buildContent(body: NotifyRequest): string {
+export function buildContent(body: NotifyRequest): string | null {
   let content: string = `${body.sender.login}\n`;
   switch (body.action) {
     case "opened":
@@ -12,9 +12,6 @@ export function buildContent(body: NotifyRequest): string {
     case "created":
       content += `## Message\n${body.comment?.body}`;
       break;
-    case "edited":
-      content += "コメントが編集されました";
-      break;
     case "submitted":
       content += `## Review Comment\n${body.review?.body}`;
       break;
@@ -22,7 +19,7 @@ export function buildContent(body: NotifyRequest): string {
       content += "## Close\nこのスレッドはクローズされました";
       break;
     default:
-      content += "";
+      return null;
   }
   return content;
 }
