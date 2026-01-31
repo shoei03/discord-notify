@@ -26,7 +26,9 @@ export function buildContent(body: NotifyRequest): string | null {
 
 /**
  * Discord スレッド名を生成する
+ * Discord の制限により、スレッド名は100文字以内に制限される
  */
 export function buildThreadName(body: NotifyRequest): string {
-  return `#${body.issue?.number || body.pull_request?.number} ${body.issue?.title || body.pull_request?.title}(${body.issue?.url || body.pull_request?.url})`;
+  const threadName = `#${body.issue?.number || body.pull_request?.number} ${body.issue?.title || body.pull_request?.title}`;
+  return threadName.slice(0, 100);
 }
