@@ -2,6 +2,13 @@
 
 GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsアプリケーション。
 
+## デプロイ先
+
+| サービス | プロジェクト | 用途 |
+|---------|-------------|------|
+| Vercel | [discord-notify](https://vercel.com/shoei-yoshidas-projects/discord-notify) | アプリ本体（`https://discord-notify-sepia.vercel.app`） |
+| Supabase | [github-issue-and-pr](https://supabase.com/dashboard/project/agncsvnemcgicwhnqprh) | スレッド情報の保存（`threads` テーブル） |
+
 ## 機能
 
 - GitHub Issue/PR の作成、コメント、レビュー、クローズをDiscordに通知
