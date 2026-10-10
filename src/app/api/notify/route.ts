@@ -69,14 +69,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const thread = await response.json();
-    console.log("Discord API response:", JSON.stringify(thread, null, 2));
-
     if (!threadId) {
       // 新規スレッドの場合のみDBに保存
-      const savedThreadName = thread.name || threadName;
-      const savedThreadId = thread.channel_id;
-      const dbResult = await saveThread(savedThreadId, savedThreadName);
+      const message = await response.json();
+      const savedThreadId: string = message.channel_id;
+      const dbResult = await saveThread(savedThreadId, threadName);
       if (!dbResult.success) {
         console.error("Failed to save thread to database:", dbResult.error);
       }
@@ -84,7 +81,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         threadId: savedThreadId,
-        threadName: savedThreadName,
+        threadName,
         dbSaved: dbResult.success,
         dbError: dbResult.error,
       });
@@ -92,8 +89,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      threadId: threadId,
-      threadName: threadName,
+      threadId,
+      threadName,
     });
   } catch (error) {
     console.error("Error creating Discord thread:", error);
