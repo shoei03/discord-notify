@@ -36,19 +36,27 @@ bun install
 
 ### 2. 環境変数の設定
 
-`.env`ファイルを作成:
+アプリが読むのは 4 つ（一覧と説明は `.env.example`）。本番と開発で置き場所が違う。
 
-```env
-# Discord
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
+| | 本番 | 開発（手元） |
+|---|---|---|
+| 値の置き場所 | Vercel の環境変数 | 1Password Environment（`.env` にマウント） |
+| 平文のファイル | なし | なし |
+| `DISCORD_WEBHOOK_URL` | 本番チャンネル | テスト用チャンネル |
+| `GITHUB_WEBHOOK_SECRET` | GitHub の Webhook 設定と同じ値 | ローカル用の別の値 |
+| `SUPABASE_URL` / `SUPABASE_SECRET_KEY` | Supabase 連携が自動で登録 | 本番と同じ値（DB は共用） |
 
-# GitHub Webhook の Secret
-GITHUB_WEBHOOK_SECRET=your-webhook-secret
+開発の準備:
 
-# Supabase
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SECRET_KEY=sb_secret_xxx
-```
+1. 1Password デスクトップアプリで Environment を作り、`.env.example` の 4 つを入れる
+2. 「Connect to → Local .env file」で、マウント先をリポジトリ直下の `.env` にする
+3. `bun run dev`（1Password アプリが起動している必要がある）
+
+注意:
+
+- `bunfig.toml` の `env = false` で、Bun による `.env` の自動読み込みを切っている。マウントされた `.env` は同時に読まれると失敗することがあり、Bun が先に読むと Next.js が読めなくなるため
+- `vercel env pull` は使わない。使わない DB パスワードまで平文で書き出すため。手元から本番の DB を直接操作したいときだけ、`bunx vercel@latest env pull <一時ファイル>` で書き出し、終わったら消す
+- 開発でも本番の DB に書き込む。試したあとにできた行は消す
 
 ### 3. Supabaseテーブル作成
 
