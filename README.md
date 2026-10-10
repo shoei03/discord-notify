@@ -21,7 +21,6 @@ GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsア�
 |-----------|------|
 | `opened` | Issue/PRが作成された |
 | `created` | コメントが追加された |
-| `edited` | コメントが編集された |
 | `submitted` | レビューが投稿された |
 | `closed` | Issue/PRがクローズされた |
 
@@ -61,7 +60,7 @@ CREATE TABLE threads (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX idx_threads_thread_id ON threads(thread_id);
+CREATE INDEX idx_threads_thread_name ON threads(thread_name);
 ```
 
 ### 4. 開発サーバー起動
