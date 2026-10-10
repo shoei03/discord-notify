@@ -1,44 +1,51 @@
-const DISCORD_FORUM_CHANNEL_ID = process.env.DISCORD_FORUM_CHANNEL_ID;
+import "server-only";
+import { getEnv } from "@/lib/env";
+import { err, ok, type Result } from "@/lib/result";
+import type { DiscordMessage, DiscordPayload } from "@/types/discord";
 
-import type { DiscordPayload } from "@/types/discord";
-
-/**
- * Discord API の URL を構築する
- */
-function buildDiscordUrl(threadId?: string): string {
-  const baseUrl = `${DISCORD_FORUM_CHANNEL_ID}?wait=true`;
-  return threadId ? `${baseUrl}&thread_id=${threadId}` : baseUrl;
-}
+const REQUEST_TIMEOUT_MS = 10_000;
 
 /**
- * Discord API に送信するペイロードを構築する
+ * Discord フォーラムに投稿する。threadId が無ければ threadName で新しいスレッドを作る
  */
-function buildPayload(
-  content: string,
-  threadName: string,
-  threadId?: string,
-): DiscordPayload {
+export async function sendToDiscord({
+  content,
+  threadName,
+  threadId,
+}: {
+  content: string;
+  threadName: string;
+  threadId?: string;
+}): Promise<Result<{ threadId: string }>> {
+  const url = new URL(getEnv().discordWebhookUrl);
+  url.searchParams.set("wait", "true");
+  if (threadId) {
+    url.searchParams.set("thread_id", threadId);
+  }
+
   // Issue 本文などに含まれる @everyone / @here / メンションで通知を飛ばさない
-  const allowed_mentions = { parse: [] };
-  return threadId
-    ? { content, allowed_mentions }
-    : { thread_name: threadName, content, allowed_mentions };
-}
+  const payload: DiscordPayload = threadId
+    ? { content, allowed_mentions: { parse: [] } }
+    : { thread_name: threadName, content, allowed_mentions: { parse: [] } };
 
-/**
- * Discord API にメッセージを送信する
- */
-export async function sendToDiscord(
-  content: string,
-  threadName: string,
-  threadId?: string,
-): Promise<Response> {
-  const url = buildDiscordUrl(threadId);
-  const payload = buildPayload(content, threadName, threadId);
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    // 例外のメッセージには Webhook URL（トークンを含む）が入ることがあるので、種類だけ残す
+    const name = error instanceof Error ? error.name : "UnknownError";
+    return err(`Discord request failed: ${name}`);
+  }
 
-  return fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  if (!response.ok) {
+    const body = await response.text();
+    return err(`Discord API error ${response.status}: ${body}`);
+  }
+  const message: DiscordMessage = await response.json();
+  return ok({ threadId: message.channel_id });
 }

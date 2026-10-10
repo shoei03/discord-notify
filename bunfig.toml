@@ -1,0 +1,3 @@
+[test]
+# server-only は react-server 条件以外で import すると throw するので、テストでは空モジュールに差し替える
+preload = ["./test/setup.ts"]
