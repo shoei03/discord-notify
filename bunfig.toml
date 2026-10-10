@@ -1,3 +1,6 @@
+# .env は 1Password Environment がマウントする。Bun が先に読むと Next.js が読めなくなることがあるので、自動読み込みを切る
+env = false
+
 [test]
 # server-only は react-server 条件以外で import すると throw するので、テストでは空モジュールに差し替える
 preload = ["./test/setup.ts"]
