@@ -2,6 +2,13 @@
 
 GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsアプリケーション。
 
+## デプロイ先
+
+| サービス | プロジェクト | 用途 |
+|---------|-------------|------|
+| Vercel | [discord-notify](https://vercel.com/shoei-yoshidas-projects/discord-notify) | アプリ本体（`https://discord-notify-sepia.vercel.app`） |
+| Supabase | [github-issue-and-pr](https://supabase.com/dashboard/project/agncsvnemcgicwhnqprh) | スレッド情報の保存（`threads` テーブル） |
+
 ## 機能
 
 - GitHub Issue/PR の作成、コメント、レビュー、クローズをDiscordに通知
@@ -14,7 +21,6 @@ GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsア�
 |-----------|------|
 | `opened` | Issue/PRが作成された |
 | `created` | コメントが追加された |
-| `edited` | コメントが編集された |
 | `submitted` | レビューが投稿された |
 | `closed` | Issue/PRがクローズされた |
 
@@ -34,6 +40,9 @@ bun install
 # Discord
 DISCORD_FORUM_CHANNEL_ID=https://discord.com/api/webhooks/xxx/yyy
 
+# GitHub Webhook の Secret
+GITHUB_WEBHOOK_SECRET=your-webhook-secret
+
 # Supabase
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -51,7 +60,7 @@ CREATE TABLE threads (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX idx_threads_thread_id ON threads(thread_id);
+CREATE INDEX idx_threads_thread_name ON threads(thread_name);
 ```
 
 ### 4. 開発サーバー起動
@@ -65,7 +74,8 @@ bun run dev
 1. GitHubリポジトリの Settings > Webhooks > Add webhook
 2. Payload URL: `https://discord-notify-sepia.vercel.app/api/notify`
 3. Content type: `application/json`
-4. Events: Issues, Issue comments, Pull requests, Pull request reviews
+4. Secret: `GITHUB_WEBHOOK_SECRET` と同じ値（未設定・不一致のリクエストは 401 で拒否）
+5. Events: Issues, Issue comments, Pull requests, Pull request reviews
 
 ## API
 

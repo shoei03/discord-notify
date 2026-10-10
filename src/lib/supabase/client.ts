@@ -20,13 +20,6 @@ export async function saveThread(
   threadId: string,
   threadName: string,
 ): Promise<SaveThreadResult> {
-  console.log("saveThread called with:", { threadId, threadName });
-  console.log("SUPABASE_URL:", process.env.SUPABASE_URL ? "set" : "NOT SET");
-  console.log(
-    "SUPABASE_SERVICE_ROLE_KEY:",
-    process.env.SUPABASE_SERVICE_ROLE_KEY ? "set" : "NOT SET",
-  );
-
   try {
     const { data, error } = await supabase
       .from("threads")
@@ -36,8 +29,6 @@ export async function saveThread(
       )
       .select()
       .single();
-
-    console.log("Supabase response - data:", data, "error:", error);
 
     if (error) {
       return { success: false, error: error.message };

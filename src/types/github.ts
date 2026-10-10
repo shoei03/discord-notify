@@ -1,17 +1,17 @@
 export interface Issue {
   url: string;
-  number: string;
+  number: number;
   title: string;
   state: string;
-  body?: string;
+  body?: string | null;
 }
 
 export interface PullRequest {
   url: string;
-  number: string;
+  number: number;
   title: string;
   state: string;
-  body?: string;
+  body?: string | null;
 }
 
 export interface NotifyRequest {
@@ -19,10 +19,10 @@ export interface NotifyRequest {
   issue?: Issue;
   pull_request?: PullRequest;
   comment?: {
-    body: string;
+    body: string | null;
   };
   review?: {
-    body: string;
+    body: string | null;
   };
   sender: {
     login: string;

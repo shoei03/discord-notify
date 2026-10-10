@@ -18,7 +18,11 @@ function buildPayload(
   threadName: string,
   threadId?: string,
 ): DiscordPayload {
-  return threadId ? { content } : { thread_name: threadName, content };
+  // Issue 本文などに含まれる @everyone / @here / メンションで通知を飛ばさない
+  const allowed_mentions = { parse: [] };
+  return threadId
+    ? { content, allowed_mentions }
+    : { thread_name: threadName, content, allowed_mentions };
 }
 
 /**
