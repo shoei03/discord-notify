@@ -4,7 +4,7 @@ export interface Env {
   discordWebhookUrl: string;
   githubWebhookSecret: string;
   supabaseUrl: string;
-  supabaseServiceRoleKey: string;
+  supabaseSecretKey: string;
 }
 
 // Webhook URL 自体がトークンなので、別ホストに本文を送らないよう Discord 以外は拒否する
@@ -30,7 +30,7 @@ export function loadEnv(source: Record<string, string | undefined>): Env {
     discordWebhookUrl,
     githubWebhookSecret: required(source, "GITHUB_WEBHOOK_SECRET"),
     supabaseUrl: required(source, "SUPABASE_URL"),
-    supabaseServiceRoleKey: required(source, "SUPABASE_SERVICE_ROLE_KEY"),
+    supabaseSecretKey: required(source, "SUPABASE_SECRET_KEY"),
   };
 }
 

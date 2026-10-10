@@ -47,7 +47,7 @@ GITHUB_WEBHOOK_SECRET=your-webhook-secret
 
 # Supabase
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=sb_secret_xxx
 ```
 
 ### 3. Supabaseテーブル作成
@@ -66,7 +66,7 @@ CREATE TABLE threads (
 
 CREATE INDEX idx_threads_thread_name ON threads(thread_name);
 
--- ポリシーは作らない。service role キーだけが RLS を bypass して読み書きできる
+-- ポリシーは作らない。secret キーだけが RLS を bypass して読み書きできる
 ALTER TABLE threads ENABLE ROW LEVEL SECURITY;
 ```
 

@@ -5,7 +5,7 @@ const valid = {
   DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/123/abc-DEF_9",
   GITHUB_WEBHOOK_SECRET: "secret",
   SUPABASE_URL: "https://xxx.supabase.co",
-  SUPABASE_SERVICE_ROLE_KEY: "key",
+  SUPABASE_SECRET_KEY: "key",
 };
 
 describe("loadEnv", () => {

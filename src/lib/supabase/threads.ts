@@ -7,8 +7,8 @@ import type { Database, Thread } from "@/types/database";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 function createThreadsClient() {
-  const { supabaseUrl, supabaseServiceRoleKey } = getEnv();
-  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+  const { supabaseUrl, supabaseSecretKey } = getEnv();
+  return createClient<Database>(supabaseUrl, supabaseSecretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
     // Bun の型では fetch に preconnect が生えているが、supabase-js は呼び出しにしか使わない
     global: { fetch: fetchWithTimeout as typeof fetch },
