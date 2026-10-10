@@ -6,8 +6,8 @@ GitHub WebhookをDiscordフォーラムチャンネルに通知するNext.jsア�
 
 | サービス | プロジェクト | 用途 |
 |---------|-------------|------|
-| Vercel | [discord-notify](https://vercel.com/shoei-yoshidas-projects/discord-notify) | アプリ本体（`https://discord-notify-sepia.vercel.app`） |
-| Supabase | [github-issue-and-pr](https://supabase.com/dashboard/project/agncsvnemcgicwhnqprh) | スレッド情報の保存（`threads` テーブル） |
+| Vercel | [discord-notify](https://vercel.com/shoei-yoshidas-projects/discord-notify) | アプリ本体（`https://discord-notify-chi.vercel.app`） |
+| Supabase | [discord-notify](https://supabase.com/dashboard/project/wxuegcthqdkrmdcnlbpv) | スレッド情報の保存（`threads` テーブル）。Vercel Marketplace 連携で作成し、環境変数は自動で同期される |
 
 ## 機能
 
@@ -88,7 +88,7 @@ bun run dev
 ### 5. GitHub Webhookの設定
 
 1. GitHubリポジトリの Settings > Webhooks > Add webhook
-2. Payload URL: `https://discord-notify-sepia.vercel.app/api/notify`
+2. Payload URL: `https://discord-notify-chi.vercel.app/api/notify`
 3. Content type: `application/json`
 4. Secret: `GITHUB_WEBHOOK_SECRET` と同じ値（未設定・不一致のリクエストは 401 で拒否）
 5. Events: Issues, Issue comments, Pull requests, Pull request reviews
