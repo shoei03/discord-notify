@@ -46,16 +46,25 @@ export async function POST(request: Request) {
     const threadName = buildThreadName(body);
 
     // DBからthreadNameでスレッドを検索
+    // 検索に失敗したまま進むと重複スレッドを作るので、500 を返して GitHub に再送させる
     const existingThread = await getThreadByName(threadName);
+    if (!existingThread.success) {
+      console.error("Failed to look up thread:", existingThread.error);
+      return NextResponse.json(
+        { error: "Failed to look up thread" },
+        { status: 500 },
+      );
+    }
     const threadId = existingThread.data?.thread_id;
 
     // Discord APIでフォーラムチャンネルにスレッドを作成（または既存スレッドに送信）
     const response = await sendToDiscord(content, threadName, threadId);
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorText = await response.text();
+      console.error("Discord API error:", response.status, errorText);
       return NextResponse.json(
-        { error: "Failed to create thread", details: errorData },
+        { error: "Failed to send to Discord", details: errorText },
         { status: response.status },
       );
     }
