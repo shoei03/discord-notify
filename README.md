@@ -36,19 +36,18 @@ bun install
 
 ### 2. 環境変数の設定
 
-`.env`ファイルを作成:
+アプリが読むのは `DISCORD_WEBHOOK_URL`、`GITHUB_WEBHOOK_SECRET`、`SUPABASE_URL`、`SUPABASE_SECRET_KEY` の 4 つ。
 
-```env
-# Discord
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
+```bash
+# Supabase の変数を .env.local に取得する（Vercel の Supabase 連携が登録したもの）
+bunx vercel@latest link --scope shoei-yoshidas-projects --project discord-notify
+bunx vercel@latest env pull
 
-# GitHub Webhook の Secret
-GITHUB_WEBHOOK_SECRET=your-webhook-secret
-
-# Supabase
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SECRET_KEY=sb_secret_xxx
+# 残りの 2 つは Vercel から取得できない（本番のみ・sensitive）ので、.env に手で書く
+cp .env.example .env
 ```
+
+`env pull` は `.env.local` を上書きするので、手で書く値は `.env` に置く。各変数の説明は `.env.example` を参照。
 
 ### 3. Supabaseテーブル作成
 
