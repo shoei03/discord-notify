@@ -41,6 +41,9 @@ bun install
 # Discord
 DISCORD_FORUM_CHANNEL_ID=https://discord.com/api/webhooks/xxx/yyy
 
+# GitHub Webhook の Secret
+GITHUB_WEBHOOK_SECRET=your-webhook-secret
+
 # Supabase
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -72,7 +75,8 @@ bun run dev
 1. GitHubリポジトリの Settings > Webhooks > Add webhook
 2. Payload URL: `https://discord-notify-sepia.vercel.app/api/notify`
 3. Content type: `application/json`
-4. Events: Issues, Issue comments, Pull requests, Pull request reviews
+4. Secret: `GITHUB_WEBHOOK_SECRET` と同じ値（未設定・不一致のリクエストは 401 で拒否）
+5. Events: Issues, Issue comments, Pull requests, Pull request reviews
 
 ## API
 

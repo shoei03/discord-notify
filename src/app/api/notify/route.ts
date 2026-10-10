@@ -1,25 +1,48 @@
 import { NextResponse } from "next/server";
 import { sendToDiscord } from "@/lib/discord/client";
 import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
+import { verifySignature } from "@/lib/github/verify-signature";
 import { getThreadByName, saveThread } from "@/lib/supabase/client";
 import type { NotifyRequest } from "@/types/github";
+
+const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
 // POSTリクエスト: Discordフォーラムに新しいスレッドを作成
 export async function POST(request: Request) {
   try {
-    const body: NotifyRequest = await request.json();
+    if (!GITHUB_WEBHOOK_SECRET) {
+      console.error("GITHUB_WEBHOOK_SECRET is not set");
+      return NextResponse.json(
+        { error: "Server misconfigured" },
+        { status: 500 },
+      );
+    }
+
+    // GitHub からのリクエストであることを署名で検証
+    const rawBody = await request.text();
+    const signature = request.headers.get("x-hub-signature-256");
+    if (!verifySignature(rawBody, signature, GITHUB_WEBHOOK_SECRET)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    // Webhook 登録時の疎通確認
+    if (request.headers.get("x-github-event") === "ping") {
+      return NextResponse.json({ message: "pong" });
+    }
+
+    const body: NotifyRequest = JSON.parse(rawBody);
 
     // メッセージコンテンツとスレッド名を生成
     const content = buildContent(body);
-    
+
     // 対応していない action の場合は処理を終了
     if (content === null) {
       return NextResponse.json(
-        { message: "Unsupported action: " + body.action },
-        { status: 200 }
+        { message: `Unsupported action: ${body.action}` },
+        { status: 200 },
       );
     }
-    
+
     const threadName = buildThreadName(body);
 
     // DBからthreadNameでスレッドを検索
