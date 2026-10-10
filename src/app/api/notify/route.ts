@@ -1,102 +1,64 @@
 import { NextResponse } from "next/server";
-import { sendToDiscord } from "@/lib/discord/client";
-import { buildContent, buildThreadName } from "@/lib/discord/message-builder";
+import { getEnv } from "@/lib/env";
+import { isSupportedEvent, parseWebhookEvent } from "@/lib/github/parse-event";
 import { verifySignature } from "@/lib/github/verify-signature";
-import { getThreadByName, saveThread } from "@/lib/supabase/client";
-import type { NotifyRequest } from "@/types/github";
+import { notify } from "@/lib/notify/notify";
 
-const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
-
-// POSTリクエスト: Discordフォーラムに新しいスレッドを作成
+// GitHub Webhook を受けて Discord フォーラムに投稿する
 export async function POST(request: Request) {
   try {
-    if (!GITHUB_WEBHOOK_SECRET) {
-      console.error("GITHUB_WEBHOOK_SECRET is not set");
-      return NextResponse.json(
-        { error: "Server misconfigured" },
-        { status: 500 },
-      );
-    }
+    const { githubWebhookSecret } = getEnv();
 
     // GitHub からのリクエストであることを署名で検証
     const rawBody = await request.text();
     const signature = request.headers.get("x-hub-signature-256");
-    if (!verifySignature(rawBody, signature, GITHUB_WEBHOOK_SECRET)) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    if (!verifySignature(rawBody, signature, githubWebhookSecret)) {
+      return jsonError("Invalid signature", 401);
     }
 
+    const eventName = request.headers.get("x-github-event");
     // Webhook 登録時の疎通確認
-    if (request.headers.get("x-github-event") === "ping") {
+    if (eventName === "ping") {
       return NextResponse.json({ message: "pong" });
     }
-
-    const body: NotifyRequest = JSON.parse(rawBody);
-
-    // メッセージコンテンツとスレッド名を生成
-    const content = buildContent(body);
-
-    // 対応していない action の場合は処理を終了
-    if (content === null) {
-      return NextResponse.json(
-        { message: `Unsupported action: ${body.action}` },
-        { status: 200 },
-      );
+    if (!isSupportedEvent(eventName)) {
+      return NextResponse.json({ message: `Unsupported event: ${eventName}` });
     }
 
-    const threadName = buildThreadName(body);
-
-    // DBからthreadNameでスレッドを検索
-    // 検索に失敗したまま進むと重複スレッドを作るので、500 を返して GitHub に再送させる
-    const existingThread = await getThreadByName(threadName);
-    if (!existingThread.success) {
-      console.error("Failed to look up thread:", existingThread.error);
-      return NextResponse.json(
-        { error: "Failed to look up thread" },
-        { status: 500 },
-      );
+    let payload: unknown;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return jsonError("Invalid JSON", 400);
     }
-    const threadId = existingThread.data?.thread_id;
-
-    // Discord APIでフォーラムチャンネルにスレッドを作成（または既存スレッドに送信）
-    const response = await sendToDiscord(content, threadName, threadId);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Discord API error:", response.status, errorText);
-      return NextResponse.json(
-        { error: "Failed to send to Discord", details: errorText },
-        { status: response.status },
-      );
+    const event = parseWebhookEvent(eventName, payload);
+    if (!event.ok) {
+      return jsonError(`Invalid payload: ${event.error}`, 400);
     }
 
-    if (!threadId) {
-      // 新規スレッドの場合のみDBに保存
-      const message = await response.json();
-      const savedThreadId: string = message.channel_id;
-      const dbResult = await saveThread(savedThreadId, threadName);
-      if (!dbResult.success) {
-        console.error("Failed to save thread to database:", dbResult.error);
-      }
-
-      return NextResponse.json({
-        success: true,
-        threadId: savedThreadId,
-        threadName,
-        dbSaved: dbResult.success,
-        dbError: dbResult.error,
-      });
+    const outcome = await notify(event.value);
+    switch (outcome.kind) {
+      case "ignored":
+        return NextResponse.json({ message: outcome.reason });
+      case "sent":
+        return NextResponse.json({
+          threadId: outcome.threadId,
+          threadName: outcome.threadName,
+          created: outcome.created,
+        });
+      case "error":
+        // 詳細はログにだけ出し、レスポンスには含めない
+        console.error(`Notify failed at ${outcome.stage}:`, outcome.error);
+        return outcome.stage === "lookup"
+          ? jsonError("Failed to look up thread", 500)
+          : jsonError("Failed to send to Discord", 502);
     }
-
-    return NextResponse.json({
-      success: true,
-      threadId,
-      threadName,
-    });
   } catch (error) {
-    console.error("Error creating Discord thread:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    console.error("Unexpected error in /api/notify:", error);
+    return jsonError("Internal server error", 500);
   }
+}
+
+function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
 }

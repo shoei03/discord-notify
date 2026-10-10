@@ -5,3 +5,8 @@ export interface DiscordPayload {
     parse: ("roles" | "users" | "everyone")[];
   };
 }
+
+// wait=true のときに返るメッセージのうち、使うフィールドだけ
+export interface DiscordMessage {
+  channel_id: string;
+}
