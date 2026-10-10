@@ -38,7 +38,7 @@ bun install
 
 ```env
 # Discord
-DISCORD_FORUM_CHANNEL_ID=https://discord.com/api/webhooks/xxx/yyy
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
 
 # GitHub Webhook の Secret
 GITHUB_WEBHOOK_SECRET=your-webhook-secret
